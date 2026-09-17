@@ -1,6 +1,3 @@
-// Server-side geocoding helper using Mapbox Geocoding API
-// Turns a plain string like "Douala, Cameroon" into { lng, lat }
-
 const axios = require('axios');
 
 async function geocode(query) {
@@ -8,6 +5,12 @@ async function geocode(query) {
 
   try {
     const token = process.env.MAPBOX_TOKEN;
+
+    if (!token) {
+      console.warn('⚠️ MAPBOX_TOKEN missing in .env — geocoding skipped');
+      return null;
+    }
+
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
       query
     )}.json`;
