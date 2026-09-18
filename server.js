@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const fetch = require('node-fetch'); // npm install node-fetch
+const fetch = require('node-fetch');
 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -12,13 +12,17 @@ const User = require('./models/User');
 const app = express();
 
 // ===== Middleware =====
-app.use(cors()); // allow everything
+app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ===== Database Connection (hard-coded, no env needed) =====
-const mongoURI =
-  'mongodb+srv://YOUR_USER:YOUR_PASS@YOUR_CLUSTER.mongodb.net/cargohub?retryWrites=true&w=majority';
+// ===== Database Connection — reads from .env (local) or Render env (prod) =====
+const mongoURI = process.env.MONGODB_URI;
+
+if (!mongoURI) {
+  console.error('❌ MONGODB_URI is not set. Add it in .env or Render → Environment.');
+  process.exit(1);
+}
 
 mongoose
   .connect(mongoURI)
@@ -35,7 +39,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'Cargo Hub API' });
 });
 
-// ===== Root (so hitting the URL doesn't 404) =====
+// ===== Root =====
 app.get('/', (req, res) => {
   res.json({ service: 'Cargo Hub API', status: 'running' });
 });
@@ -65,14 +69,12 @@ async function seedAdmin() {
   }
 }
 
-// ===== Keep-alive (prevents Render free tier from sleeping) =====
+// ===== Keep-alive =====
 const keepAlive = () => {
   console.log('🔄 Keep-alive monitor started — pinging every 10 minutes');
   setInterval(async () => {
     try {
-      const response = await fetch(
-        'https://cargohub-sn8r.onrender.com/api/health'
-      );
+      const response = await fetch('https://cargohub-sn8r.onrender.com/api/health');
       console.log(`✅ Keep-alive ping: ${response.status}`);
     } catch (error) {
       console.log(`⚠️ Keep-alive ping failed: ${error.message}`);
