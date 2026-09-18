@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 const {
@@ -11,11 +12,14 @@ const {
 } = require('../controllers/shipmentController');
 const { protect } = require('../middleware/auth');
 
-router.use(protect); // all routes require auth
+// ⭐ PUBLIC route — MUST be before router.use(protect)
+router.get('/track/:trackingId', trackShipment);
+
+// Everything below requires login
+router.use(protect);
 
 router.get('/', getShipments);
 router.get('/stats', getStats);
-router.get('/track/:trackingId', trackShipment);
 router.get('/:id', getShipment);
 router.post('/', createShipment);
 router.put('/:id', updateShipment);
